@@ -278,33 +278,49 @@ dd bs=4M if=/path/to/archlinux.iso of=/dev/sdx status=progress oflag=sync
 24. Create a file under `/etc/X11/xorg.conf` and add the following:
 
     ``` 
-    Section "Module"
-    	Load "modesetting"
+    Section "ServerLayout"
+        Identifier "layout"
+        Screen 0 "nvidia"
+        Inactive "intel"
     EndSection
     
     Section "Device"
-    	Identifier "nvidia"
-    	Driver "nvidia"
-    	BusID "PCI:x:x:x"
-    	Option "AllowEmptyInitialConfiguration"
+        Identifier "nvidia"
+        Driver "nvidia"
+        BusID "PCI:X:X:X"
     EndSection
+    
+    Section "Screen"
+        Identifier "nvidia"
+        Device "nvidia"
+        Option "AllowEmptyInitialConfiguration"
+    EndSection
+    
+    Section "Device"
+        Identifier "intel"
+        Driver "modesetting"
+    EndSection
+    
+    Section "Screen"
+        Identifier "intel"
+        Device "intel"
+    EndSection
+    
     ```
 
     Note that under BusID, you should enter the Bus ID of the Nvidia device as in the following example:
 
     If the ID is `02:00.0` you should enter `2:0:0`.
 
-25. Create another file under `X11/xorg.conf.d/10-nvidia-conf` and add the following:
+25. Create another file under `/etc/X11/xorg.conf.d/nvidia-conf` and add the following:
 
     ```bash
-    Section "Device"
-    	Identifier "Device0"
-    	Driver "nvidia"
-    	VendorName "NVIDIA Corporation"
-    	BusID "PCI:x:x:x"
+    Section "ServerLayout"
+    	Identifier "layout"
+    	Option "AllowNVIDIAGPUScreens"
     EndSection
     ```
-
+    
 26. Check the files under `/usr/share/X11/xorg.conf.d` and move any files that contain nvidia information. I.e.
 
     ```bash
@@ -338,21 +354,29 @@ dd bs=4M if=/path/to/archlinux.iso of=/dev/sdx status=progress oflag=sync
     reboot
     ```
 
-30. Add tapping option to the touchpad (assuming using `libinput`. First copy the default touchpad config file from `/usr/share/X11/xorg.conf.d/40-libinput.conf` to `/etc/X11/xorg.conf.d/40-libinput.conf`. Open `/etc/X11/xorg.conf.d/40-libinput.conf` and under the touchpad section, add:
+30. Install `i3-gaps` by running
+
+    ```bash
+    sudo pacman -S i3-gaps
+    ```
+
+31. Reboot
+
+32. Add tapping option to the touchpad (assuming using `libinput`. First copy the default touchpad config file from `/usr/share/X11/xorg.conf.d/40-libinput.conf` to `/etc/X11/xorg.conf.d/40-libinput.conf`. Open `/etc/X11/xorg.conf.d/40-libinput.conf` and under the touchpad section, add:
 
     ```bash
     Option "Tapping" "on"
     ```
 
-31. To fix MATLAB `MEvent. Case!` bug, disable horizontal scrolling. If using `libinput` do
+33. To fix MATLAB `MEvent. Case!` bug, disable horizontal scrolling. If using `libinput` do
 
     ```bash
     xinput --set-prop <device_id> "libinput Horizontal Scroll Enabled" 0
     ```
 
-32. Fix `Unable to locate theme engine in module path “murrine”`. Simply install `gtk-engine-murrine`.
+34. Fix `Unable to locate theme engine in module path “murrine”`. Simply install `gtk-engine-murrine`.
 
-33. Fix `i2c_hid i2c-ELAN1010:00: i2c_hid_get_input: incomplete report` flooding `journalctl` and `dmesg` need to set `acpi_osi=!` under `GRUB_CMDLINE_LINUX_DEFAULT` on `/etc/default/grub`. I.e.,
+35. Fix `i2c_hid i2c-ELAN1010:00: i2c_hid_get_input: incomplete report` flooding `journalctl` and `dmesg` need to set `acpi_osi=!` under `GRUB_CMDLINE_LINUX_DEFAULT` on `/etc/default/grub`. I.e.,
 
     ```bash
     GRUB_CMDLINE_LINUX_DEFAULT="splash rcutree.rcu_idle_gp_delay=1 acpi_osi=!"
